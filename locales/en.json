@@ -1,0 +1,23 @@
+{
+  "home": "Home",
+  "subtitle": "Share your du'a",
+  "verse_of_day": "Verse of the Day",
+  "prayer_of_day": "Du'a of the Day",
+  "wishes_title": "Daily Du'a",
+  "wishes_subtitle": "Share your du'a with the community",
+  "wishes_placeholder": "Write your du'a here...",
+  "send": "Send",
+  "sending": "Sending...",
+  "wishes_submitted": "Your du'a has been sent!",
+  "wishes_list_title": "Recent Du'as",
+  "limit_reached": "You can only send one du'a per day",
+  "no_wishes_yet": "No du'as yet. Be the first to share!",
+  "report_confirm": "Do you want to report this du'a?",
+  "report_success": "Du'a reported. Thank you!",
+  "report_failed": "Failed to report. Try again.",
+  "bad_words": "❌ Du'a contains inappropriate words",
+  "load_error": "Failed to load du'as",
+  "submit_error": "Failed to send du'a. Try again.",
+  "ip_error": "Failed to verify IP address. Please try again.",
+  "already_reported": "You have already reported this wish."
+}
