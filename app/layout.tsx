@@ -3,6 +3,7 @@
 import './globals.css';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
 function LangSwitcher() {
   const pathname = usePathname();
@@ -38,6 +39,15 @@ function LangSwitcher() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
+  // ✅ Registrace Service Worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('✅ Service Worker registrován:', reg.scope))
+        .catch(err => console.log('❌ Service Worker selhal:', err));
+    }
+  }, []);
+
   // ✅ Skryjeme přepínač jen v admin sekci
   const hideSwitcher = pathname.startsWith('/admin');
 
