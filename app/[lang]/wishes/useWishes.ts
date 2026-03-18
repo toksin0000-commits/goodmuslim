@@ -67,18 +67,28 @@ export const useWishes = (dict: any, lang: string) => {
     checkDailyLimit();
   }, [ipAddress, lang]);
 
-  // Načtení přání
+  // 🔥 Načtení přání - S CHYTROU DETEKCÍ ZMĚN (podle první appky)
   const loadWishes = async () => {
     try {
       const { data, error } = await supabase
         .from('goodmuslim_wishes')
         .select('*')
         .eq('is_hidden', false)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }) // true = nejstarší první (můžeš změnit)
         .limit(50);
 
       if (error) throw error;
-      if (data) setWishes([...data].sort(() => Math.random() - 0.5));
+      if (!data) return;
+
+      // 🔥 Chytrá detekce - porovnání jestli se data změnila
+      const same =
+        wishes.length === data.length &&
+        wishes.every((w, i) => w.id === data[i].id);
+
+      if (!same) {
+        setWishes(data);  // Aktualizujeme jen když je změna
+      }
+
     } catch (err) {
       console.error('Chyba při načítání:', err);
       setFetchError(dict.load_error || 'Nepodařilo se načíst přání');
@@ -92,14 +102,13 @@ export const useWishes = (dict: any, lang: string) => {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ NAHLÁŠENÍ PŘÁNÍ (upraveno pro trigger)
+  // NAHLÁŠENÍ PŘÁNÍ
   const handleReport = async (wishId: string) => {
     if (!confirm(dict.report_confirm)) return;
 
     setReportingId(wishId);
 
     try {
-      // Pouze vložíme report do tabulky hlášení
       const { error: reportError } = await supabase
         .from('goodmuslim_reports')
         .insert({ 
@@ -108,17 +117,12 @@ export const useWishes = (dict: any, lang: string) => {
         });
 
       if (reportError) {
-        // Pokud je to chyba duplicity (už reportoval)
         if (reportError.code === '23505') {
           alert(dict.already_reported || 'Toto přání jste již nahlásili.');
           return;
         }
         throw reportError;
       }
-
-      // Trigger se postará o:
-      // 1. Zvýšení počtu reportů v tabulce wishes
-      // 2. Automatické skrytí při 3 unikátních reportech
       
       alert(dict.report_success);
       loadWishes();
