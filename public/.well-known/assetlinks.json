@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.toksin.goodmuslim",
+      "sha256_cert_fingerprints": [
+        "3C:35:7B:1E:DD:E4:6F:B9:EA:CB:43:21:80:B2:01:B3:76:FC:B0:31:A6:14:C6:10:7E:37:91:97:5D:85:67:1E"
+      ]
+    }
+  }
+]
