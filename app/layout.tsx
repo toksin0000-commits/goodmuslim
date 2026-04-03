@@ -4,6 +4,7 @@ import './globals.css';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react'; // ← přidáno
 
 function LangSwitcher() {
   const pathname = usePathname();
@@ -38,10 +39,8 @@ function LangSwitcher() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  
- 
 
-  // ✅ Skryjeme přepínač jen v admin sekci
+  // Skryjeme přepínač jen v admin sekci
   const hideSwitcher = pathname.startsWith('/admin');
 
   return (
@@ -52,7 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <LangSwitcher />
           </div>
         )}
+
         {children}
+
+        <Analytics /> {/* ← přidáno */}
       </body>
     </html>
   );
