@@ -19,9 +19,7 @@ export type Surah = {
   verses: Verse[] 
 };
 
-// JSON je přímo pole súr, ne objekt s property 'surahs'
 export type QuranData = Surah[];
-
 export type Lang = 'ar' | 'en' | 'ur';
 
 // ========== CACHE ==========
@@ -31,7 +29,7 @@ interface QuranCacheData {
 }
 
 const quranCache = new Map<string, QuranCacheData>();
-const QURAN_CACHE_DURATION = 86400000; // 24 hodin
+const QURAN_CACHE_DURATION = 86400000; // cache duration
 
 // ========== STATICKÁ DATA ==========
 export const surahs = [
@@ -151,12 +149,40 @@ export const surahs = [
   { id: 114, name: "An-Nas", name_ar: "الناس", name_en: "The Mankind", name_ur: "الناس", verses: 6 },
 ];
 
-// ========== PŘEKLADY ==========
+// ========== TRANSLATIONS ==========
 export const translations = {
-  ar: { title: "القرآن", surah: "سورة", ayah: "آية", loading: "جاري التحميل...", error: "فشل تحميل القرآن", home: "الرئيسية", search: "بحث" },
-  en: { title: "Qur'an", surah: "Surah", ayah: "Ayah", loading: "Loading...", error: "Failed to load Qur'an", home: "Home", search: "Search" },
-  ur: { title: "قرآن", surah: "سورہ", ayah: "آیت", loading: "لوڈ ہو رہا ہے...", error: "قرآن لوڈ نہیں ہو سکا", home: "مرکزی صفحہ", search: "تلاش" },
+  ar: { 
+    title: "القرآن",
+    surah: "سورة",
+    ayah: "آية",
+    allAyahs: "جميع الآيات",        // 🔥 přidáno
+    loading: "جاري التحميل...",
+    error: "فشل تحميل القرآن",
+    home: "الرئيسية",
+    search: "بحث"
+  },
+  en: { 
+    title: "Qur'an",
+    surah: "Surah",
+    ayah: "Ayah",
+    allAyahs: "All verses",         // 🔥 přidáno
+    loading: "Loading...",
+    error: "Failed to load Qur'an",
+    home: "Home",
+    search: "Search"
+  },
+  ur: { 
+    title: "قرآن",
+    surah: "سورہ",
+    ayah: "آیت",
+    allAyahs: "تمام آیات",          // 🔥 přidáno
+    loading: "لوڈ ہو رہا ہے...",
+    error: "قرآن لوڈ نہیں ہو سکا",
+    home: "مرکزی صفحہ",
+    search: "تلاش"
+  },
 };
+
 
 // ========== HOOK ==========
 export const useQuran = (lang: Lang) => {
@@ -176,54 +202,48 @@ export const useQuran = (lang: Lang) => {
   };
 
   useEffect(() => {
-  async function loadQuran() {
-    setLoading(true);
-    setError(null);
-    const cacheKey = `quran_${lang}`;
-    const cached = quranCache.get(cacheKey);
+    async function loadQuran() {
+      setLoading(true);
+      setError(null);
 
-    if (cached && Date.now() - cached.timestamp < QURAN_CACHE_DURATION) {
-      // cached.data je pole - najdi súru podle ID
-      const surahData = cached.data.find((s: Surah) => s.id === surahId);
-      if (surahData) {
-        setVerses(surahData.verses || []);
+      const cacheKey = `quran_${lang}`;
+      const cached = quranCache.get(cacheKey);
+
+      if (cached && Date.now() - cached.timestamp < QURAN_CACHE_DURATION) {
+        const surahData = cached.data.find((s: Surah) => s.id === surahId);
+        if (surahData) setVerses(surahData.verses || []);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-      return;
+
+      try {
+        const res = await fetch(`/data/quran_${lang}.json`);
+        if (!res.ok) throw new Error('Načtení selhalo');
+
+        const quranData: QuranData = await res.json();
+        quranCache.set(cacheKey, { data: quranData, timestamp: Date.now() });
+
+        const surahData = quranData.find((s: Surah) => s.id === surahId);
+        if (surahData) setVerses(surahData.verses || []);
+      } catch (err) {
+        console.error('Chyba načtení Koránu:', err);
+        setError(t.error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    try {
-      const res = await fetch(`/data/quran_${lang}.json`);
-      if (!res.ok) throw new Error('Načtení selhalo');
-      
-      // Toto je přímo pole súr
-      const quranData: QuranData = await res.json();
-      
-      // Ulož celé pole do cache
-      quranCache.set(cacheKey, { data: quranData, timestamp: Date.now() });
-
-      // Najdi aktuální súru v poli
-      const surahData = quranData.find((s: Surah) => s.id === surahId);
-      if (surahData) {
-        setVerses(surahData.verses || []);
-      }
-    } catch (err) {
-      console.error('Chyba načtení Koránu:', err);
-      setError(t.error);  // tady používáme t.error, ale není v závislostech
-    } finally {
-      setLoading(false);
-    }
-  }
-  loadQuran();
-// ✅ SPRÁVNÉ ZÁVISLOSTI: jen lang a surahId, ayahNumber není potřeba
-}, [lang, surahId]);
+    loadQuran();
+  }, [lang, surahId, ayahNumber]); // 🔥 přidáno ayahNumber
 
   const currentSurah = surahs.find(s => s.id === surahId);
+  const currentVerse = verses.find(v => v.id === ayahNumber) || null;
 
   return { 
     surahId, 
     ayahNumber, 
     verses, 
+    verse: currentVerse,   // 🔥 jeden verš
     loading, 
     error, 
     t, 
