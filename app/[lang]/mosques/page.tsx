@@ -3,10 +3,11 @@
 
 import Link from "next/link";
 import { use } from "react";
-import { useMosques } from './useMosques';
-import { Lang } from './mosque.types';
+import { useMosques } from "./useMosques";
+import { Lang } from "./mosque.types";
+import RateAppButton from "../../components/RateAppButton";
 
-// Překlady pro mešity
+// Překlady pro mešity + tlačítko hodnocení
 const translations = {
   ar: {
     title: "المساجد القريبة",
@@ -23,7 +24,8 @@ const translations = {
     searching: "جاري البحث عن مساجد بالقرب منك...",
     notFound: "لم يتم العثور على مساجد قريبة.",
     cooldownMessage: "الرجاء الانتظار قبل البحث مرة أخرى",
-    refresh: "تحديث الموقع"
+    refresh: "تحديث الموقع",
+    rateApp: "قيّم التطبيق"
   },
   en: {
     title: "Mosques Nearby",
@@ -40,7 +42,8 @@ const translations = {
     searching: "Searching for mosques near you...",
     notFound: "No mosques found nearby.",
     cooldownMessage: "Please wait before searching again",
-    refresh: "Refresh location"
+    refresh: "Refresh location",
+    rateApp: "Rate the App"
   },
   ur: {
     title: "قریبی مساجد",
@@ -57,14 +60,19 @@ const translations = {
     searching: "آپ کے آس پاس مساجد تلاش کر رہا ہے...",
     notFound: "آس پاس کوئی مسجد نہیں ملی۔",
     cooldownMessage: "براہ کرم اگلی تلاش سے پہلے انتظار کریں",
-    refresh: "مقام کی تجدید کریں"
+    refresh: "مقام کی تجدید کریں",
+    rateApp: "ایپ کی درجہ بندی کریں"
   }
 };
 
-export default function MosquesPage({ params }: { params: Promise<{ lang: Lang }> }) {
+export default function MosquesPage({
+  params
+}: {
+  params: Promise<{ lang: Lang }>;
+}) {
   const { lang } = use(params);
   const t = translations[lang];
-  
+
   const {
     userLocation,
     nearbyMosques,
@@ -77,25 +85,39 @@ export default function MosquesPage({ params }: { params: Promise<{ lang: Lang }
   } = useMosques(lang, t);
 
   return (
-    <div className="flex-1 flex flex-col px-6 pb-6 text-[#222]" dir={lang === 'ur' ? 'rtl' : 'ltr'}>
-      <div className="absolute top-4 left-4" style={{ left: '1rem', right: 'auto' }}>
-        <Link href={`/${lang}`} className="text-sm text-[#222] hover:underline bg-white/70 px-3 py-1 rounded-full shadow-sm shadow-black/50 inline-flex items-center justify-center h-9.5">
-          {lang === 'ur' ? '→' : '←'} {t.home}
+    <div
+      className="flex-1 flex flex-col px-6 pb-6 text-[#222]"
+      dir={lang === "ur" ? "rtl" : "ltr"}
+    >
+      {/* Zpět */}
+      <div
+        className="absolute top-4 left-4"
+        style={{ left: "1rem", right: "auto" }}
+      >
+        <Link
+          href={`/${lang}`}
+          className="text-sm text-[#222] hover:underline bg-white/70 px-3 py-1 rounded-full shadow-sm shadow-black/50 inline-flex items-center justify-center h-9.5"
+        >
+          {lang === "ur" ? "→" : "←"} {t.home}
         </Link>
       </div>
 
       <div className="mt-25">
-        <h1 className="text-lg font-medium text-center text-[#222]">{t.title}</h1>
-        
+        {/* Nadpis */}
+        <h1 className="text-lg font-medium text-center text-[#222]">
+          {t.title}
+        </h1>
+
+        {/* Hledat mešity – NAHOŘE */}
         <button
           onClick={handleFindNearby}
           disabled={loading || cooldown}
           className="mt-4 w-full py-3 px-4 bg-[#2d5a27] text-[#f7f5f2] rounded-xl border border-white shadow-sm shadow-black/50 font-medium hover:bg-opacity-80 transition disabled:opacity-50"
         >
-          {loading ? t.finding : (cooldown ? '⏳' : t.findNearby)}
+          {loading ? t.finding : cooldown ? "⏳" : t.findNearby}
         </button>
 
-        {/* Tlačítko pro obnovení - zobrazí se jen když je poloha známá */}
+        {/* Obnovit polohu */}
         {userLocation && (
           <button
             onClick={() => {
@@ -108,7 +130,28 @@ export default function MosquesPage({ params }: { params: Promise<{ lang: Lang }
           </button>
         )}
 
-        {/* Stav: Probíhá hledání */}
+        {/* Úvodní stav: obrázek + RATE APP místo textu */}
+        {!userLocation &&
+          !loading &&
+          !error &&
+          !notFound &&
+          nearbyMosques.length === 0 && (
+            <div className="flex flex-col items-center justify-center mt-16">
+              <img
+                src="/images/mosque-icon.png"
+                alt="Mosque"
+                className="w-84 h-84 object-contain"
+              />
+
+              {/* Tlačítko Rate App místo textu „Find mosques near you…“ */}
+              <div className="mt-6 w-full flex">
+  <RateAppButton label={t.rateApp} />
+</div>
+
+            </div>
+          )}
+
+        {/* Probíhá hledání */}
         {loading && (
           <div className="flex flex-col items-center justify-center mt-8">
             <div className="animate-pulse text-[#2d5a27] text-2xl">⏳</div>
@@ -116,43 +159,36 @@ export default function MosquesPage({ params }: { params: Promise<{ lang: Lang }
           </div>
         )}
 
-        {/* Stav: Před prvním hledáním */}
-{!userLocation && !loading && !error && !notFound && nearbyMosques.length === 0 && (
-  <div className="flex flex-col items-center justify-center mt-16">
-    <img 
-      src="/images/mosque-icon.png"  // ← cesta k tvému obrázku
-      alt="Mosque" 
-      className="w-84 h-84 object-contain"  // ← uprav velikost podle potřeby
-    />
-    <p className="text-sm text-gray-600 mt-4 font-medium">
-      {lang === 'ar' ? ' ابحث عن المساجد القريبة' :
-       lang === 'ur' ? ' اپنے آس پاس مساجد تلاش کریں' :
-       ' Find mosques near you'}
-    </p>
-  </div>
-)}
-
-        {/* Stav: Chyba */}
+        {/* Chyba */}
         {error && !loading && (
           <p className="mt-2 text-sm text-red-600 text-center">{error}</p>
         )}
 
-        {/* Stav: Nic nenalezeno */}
+        {/* Nic nenalezeno */}
         {notFound && !loading && !error && (
-          <p className="mt-2 text-sm text-amber-600 text-center">{t.notFound}</p>
+          <p className="mt-2 text-sm text-amber-600 text-center">
+            {t.notFound}
+          </p>
         )}
 
-        {/* Stav: Nalezené mešity */}
+        {/* Výsledky */}
         {!loading && !error && !notFound && nearbyMosques.length > 0 && (
           <div className="flex flex-col gap-4 mt-6">
             {nearbyMosques.map((mosque, index) => (
-              <div key={`${mosque.name}-${index}`} className="rounded-xl px-4 py-3 text-sm bg-[#f7f5f2] text-[#222] shadow-inner shadow-amber-900/10">
+              <div
+                key={`${mosque.name}-${index}`}
+                className="rounded-xl px-4 py-3 text-sm bg-[#f7f5f2] text-[#222] shadow-inner shadow-amber-900/10"
+              >
                 <h2 className="font-medium text-[#222]">{mosque.name}</h2>
                 {mosque.denomination && (
-                  <p className="text-xs text-gray-600 mt-0.5">{t.denomination}: {mosque.denomination}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t.denomination}: {mosque.denomination}
+                  </p>
                 )}
                 <p className="text-sm text-[#222] mt-1">{mosque.address}</p>
-                <p className="text-xs text-gray-600 mt-2">{t.distance}: {mosque.distance.toFixed(1)} {t.km}</p>
+                <p className="text-xs text-gray-600 mt-2">
+                  {t.distance}: {mosque.distance.toFixed(1)} {t.km}
+                </p>
               </div>
             ))}
           </div>

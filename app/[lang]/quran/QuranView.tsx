@@ -9,13 +9,17 @@ interface QuranViewProps {
 
 export default function QuranView({ lang }: QuranViewProps) {
   const {
-    surahId, ayahNumber, verses, loading, error,
-    t, currentSurah, setSurahId, setAyahNumber, getSurahName
+    surahId, ayahNumber, verses, verse,
+    loading, error, t, currentSurah,
+    setSurahId, setAyahNumber, getSurahName
   } = useQuran(lang);
+
+  const showAll = ayahNumber === 0; // 🔥 0 = zobrazit celou súru
 
   return (
     <div className="p-6 flex flex-col gap-6" dir={lang === 'ur' ? 'rtl' : 'ltr'}>
-      <div className="absolute top-4 left-4" style={{ left: '1rem', right: 'auto' }}>
+      
+      <div className="absolute top-4 left-4">
         <Link href={`/${lang}`} className="text-sm text-[#222] hover:underline bg-white/70 px-3 py-1 rounded-full shadow-sm shadow-black/50 inline-flex items-center justify-center h-9.5">
           {lang === 'ur' ? '→' : '←'} {t.home}
         </Link>
@@ -33,7 +37,7 @@ export default function QuranView({ lang }: QuranViewProps) {
             value={surahId} 
             onChange={(e) => { 
               setSurahId(Number(e.target.value)); 
-              setAyahNumber(1); 
+              setAyahNumber(0); // 🔥 při změně súry zobraz celou
             }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-[#222] shadow-inner shadow-black/10"
           >
@@ -48,10 +52,12 @@ export default function QuranView({ lang }: QuranViewProps) {
         <div className="mt-4">
           <label className="block text-sm text-[#222] mb-1">{t.ayah}</label>
           <select 
-            value={ayahNumber} 
+            value={ayahNumber}
             onChange={(e) => setAyahNumber(Number(e.target.value))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-[#222] shadow-inner shadow-black/10"
           >
+            <option value={0}>{t.allAyahs}</option>
+
             {currentSurah && Array.from({ length: currentSurah.verses }).map((_, i) => (
               <option key={i + 1} value={i + 1}>{i + 1}</option>
             ))}
@@ -59,7 +65,7 @@ export default function QuranView({ lang }: QuranViewProps) {
         </div>
 
         <h1 className="text-xl font-bold text-[#222] mt-6">
-          {getSurahName(surahId)} {t.ayah} {ayahNumber}
+          {getSurahName(surahId)} {showAll ? '' : `${t.ayah} ${ayahNumber}`}
         </h1>
 
         {loading && <p className="text-gray-500 mt-4">{t.loading}</p>}
@@ -67,14 +73,27 @@ export default function QuranView({ lang }: QuranViewProps) {
 
         {!loading && !error && (
           <div className="space-y-3 leading-relaxed mt-4">
-            {verses.map(v => (
-              <p key={v.id} className="text-[#222]">
-                <span className="font-semibold">{v.id}.</span> {v.text}
-                {lang !== 'ar' && v.translation && (
-                  <span className="block text-sm text-gray-600 mt-1">{v.translation}</span>
-                )}
-              </p>
-            ))}
+            
+            {showAll ? (
+              verses.map(v => (
+                <p key={v.id} className="text-[#222]">
+                  <span className="font-semibold">{v.id}.</span> {v.text}
+                  {lang !== 'ar' && v.translation && (
+                    <span className="block text-sm text-gray-600 mt-1">{v.translation}</span>
+                  )}
+                </p>
+              ))
+            ) : (
+              verse && (
+                <p className="text-[#222]">
+                  <span className="font-semibold">{verse.id}.</span> {verse.text}
+                  {lang !== 'ar' && verse.translation && (
+                    <span className="block text-sm text-gray-600 mt-1">{verse.translation}</span>
+                  )}
+                </p>
+              )
+            )}
+
           </div>
         )}
       </div>
