@@ -3,7 +3,7 @@
 export default function RateAppButton({ label }: { label: string }) {
   const handleRate = () => {
     window.open(
-      "https://play.google.com/store/apps/details?id=com.toksin.goodmuslim&reviewId=0",
+      "https://play.google.com/store/apps/details?id=com.toksin.goodmuslim",
       "_blank"
     );
   };
